@@ -1,0 +1,69 @@
+{% extends 'allianceauth/base-bs5.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block page_title %}{% translate "Character Assets" %}{% endblock %}
+{% block header_nav_brand %}{% translate "Character Assets" %}{% endblock header_nav_brand %}
+
+{% block extra_css %}
+    {# ?v=versie: anders serveert de browser na een update z'n oude gecachte CSS. #}
+    <link rel="stylesheet" href="{% static 'characterassets/characterassets.css' %}?v={{ versie }}">
+{% endblock extra_css %}
+
+{% block content %}
+    <div class="ca-app">
+
+        <div class="ca-hero">
+            <img class="ca-hero-icon" alt=""
+                 src="https://images.evetech.net/types/17366/icon?size=64">
+            <div>
+                <h1 class="ca-hero-title">{% translate "Character Assets" %}</h1>
+                <div class="ca-hero-sub">
+                    {% blocktranslate count n=aantal_items %}{{ n }} item{% plural %}{{ n }} items{% endblocktranslate %}
+                    {% if characters %}
+                        {% blocktranslate count c=characters|length %}van {{ c }} character{% plural %}van {{ c }} characters{% endblocktranslate %}
+                    {% endif %}
+                    {% if bijgewerkt %}
+                        &middot; {% translate "ESI bijgewerkt" %}: {{ bijgewerkt }}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="ca-tabs">
+            <a class="ca-tab {% if actief == 'zoeken' %}is-actief{% endif %}"
+               href="{% url 'characterassets:zoeken' %}?bereik={{ bereik }}">{% translate "Zoeken" %}</a>
+            <a class="ca-tab {% if actief == 'boom' %}is-actief{% endif %}"
+               href="{% url 'characterassets:boom' %}?bereik={{ bereik }}">{% translate "Boom" %}</a>
+
+            <span class="ca-tabvul"></span>
+
+            {% if mag_corp %}
+                {# Het bereik hoort zichtbaar te zijn: "niets gevonden" betekent
+                   iets heel anders als je alleen je eigen spullen doorzocht. #}
+                <span class="ca-bereik">
+                    <a class="ca-bereikknop {% if bereik == 'mijn' %}is-actief{% endif %}"
+                       href="?bereik=mijn{% if q %}&q={{ q|urlencode }}{% endif %}">{% translate "Mijn characters" %}</a>
+                    <a class="ca-bereikknop {% if bereik == 'corp' %}is-actief{% endif %}"
+                       href="?bereik=corp{% if q %}&q={{ q|urlencode }}{% endif %}">{% translate "Hele corp" %}</a>
+                </span>
+            {% endif %}
+        </div>
+
+        {% if zonder_token %}
+            <div class="ca-waarschuwing">
+                <strong>{{ zonder_token|length }}</strong>
+                {% blocktranslate count n=zonder_token|length %}character heeft geen assets-token{% plural %}characters hebben geen assets-token{% endblocktranslate %}
+                — {% translate "hun spullen staan hier niet tussen." %}
+                <span class="ca-dim">{{ zonder_token|join:", "|truncatechars:220 }}</span>
+            </div>
+        {% endif %}
+
+        {% block details %}{% endblock %}
+
+        <div class="ca-voet">
+            {% translate "ESI werkt assets maar eens per uur bij, dus verser dan dit wordt het niet." %}
+            <a href="?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}ververs=1">{% translate "Opnieuw ophalen" %}</a>
+        </div>
+    </div>
+{% endblock %}

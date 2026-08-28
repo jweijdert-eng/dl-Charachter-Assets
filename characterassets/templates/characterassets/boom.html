@@ -1,0 +1,53 @@
+{% extends "characterassets/base.html" %}
+{% load i18n %}
+
+{% block details %}
+
+    <form class="ca-zoekbalk" method="get">
+        <input type="hidden" name="bereik" value="{{ bereik }}">
+
+        <select class="ca-select ca-select-breed" name="locatie" onchange="this.form.submit()">
+            <option value="">{% translate "Kies een locatie…" %}</option>
+            {% for p in plekken %}
+                <option value="{{ p.id }}" {% if p.id == wortel %}selected{% endif %}>
+                    {{ p.naam }} ({{ p.items }})
+                </option>
+            {% endfor %}
+        </select>
+
+        <input class="ca-zoekveld" type="search" name="q" value="{{ q }}"
+               placeholder="{% translate 'Filter binnen deze locatie…' %}">
+        <button class="ca-knop" type="submit">{% translate "Filter" %}</button>
+    </form>
+
+    {% if wortel is None %}
+        <div class="ca-leeg">
+            <p>{% translate "Kies hierboven een station of structuur om erin te bladeren." %}</p>
+            <p class="ca-dim">
+                {% translate "Het getal achter een locatie is het aantal items dat daar ligt — alles meegeteld wat in schepen en containers zit." %}
+            </p>
+        </div>
+
+    {% elif not knopen %}
+        <div class="ca-leeg">
+            <p>{% translate "Hier ligt niets dat aan je filter voldoet." %}</p>
+        </div>
+
+    {% else %}
+        <div class="ca-boomkop">
+            <span class="ca-plek">{{ wortel_naam }}</span>
+            {% if afgekapt %}
+                <span class="ca-afgekapt">
+                    {% translate "— afgekapt op" %} {{ max_knopen }} {% translate "regels; filter om minder te zien" %}
+                </span>
+            {% endif %}
+        </div>
+
+        <div class="ca-boom">
+            {% for knoop in knopen %}
+                {% include "characterassets/_knoop.html" with knoop=knoop diepte=0 %}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+{% endblock %}

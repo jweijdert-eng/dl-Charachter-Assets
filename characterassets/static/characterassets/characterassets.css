@@ -1,0 +1,181 @@
+/* Character Assets — zelfde EVE-dark palet als Mijn Dashboard, Corp KillBoard
+   en Character Scan, zodat de plugins onderling niet uit elkaar vallen. */
+.ca-app {
+    --ca-surface: #0b0b1a;
+    --ca-surface-2: #0f0f22;
+    --ca-border: #1c1c35;
+    --ca-text: #c8cde8;
+    --ca-dim: #a0a0be;
+    --ca-blue: #00b4d8;
+    --ca-gold: #f0c040;
+    --ca-green: #3ecf6e;
+    --ca-red: #e05555;
+
+    color: var(--ca-text);
+}
+.ca-app a { color: var(--ca-blue); text-decoration: none; }
+.ca-app a:hover { text-decoration: underline; }
+.ca-app .ca-dim { color: var(--ca-dim); }
+
+/* ── Kop ──────────────────────────────────────────────────────────────── */
+.ca-app .ca-hero {
+    display: flex; align-items: center; gap: .9rem;
+    padding: .8rem 1rem; border-radius: 4px; margin-bottom: 1rem;
+    background: linear-gradient(90deg, rgba(240, 192, 64, .10), var(--ca-surface) 45%);
+    border: 1px solid var(--ca-border);
+}
+.ca-app .ca-hero-icon { width: 54px; height: 54px; border-radius: 4px; flex: none; }
+.ca-app .ca-hero-title { font-size: 1.35rem; font-weight: 700; margin: 0; line-height: 1.2; }
+.ca-app .ca-hero-sub { font-size: .85rem; color: var(--ca-dim); }
+
+/* ── Tabbladen + bereikschakelaar ─────────────────────────────────────── */
+.ca-app .ca-tabs {
+    display: flex; align-items: flex-end; gap: .25rem; margin-bottom: 1rem; flex-wrap: wrap;
+    padding: .3rem .35rem 0; border-radius: 4px 4px 0 0;
+    background: var(--ca-surface); border: 1px solid var(--ca-border);
+    border-bottom: 2px solid var(--ca-gold);
+}
+.ca-app .ca-tabvul { flex: 1 1 auto; }
+.ca-app .ca-tab {
+    padding: .55rem 1.05rem; border-radius: 4px 4px 0 0;
+    font-size: .92rem; font-weight: 600; color: #9aa0c0;
+    border: 1px solid transparent; border-bottom: 0; margin-bottom: -2px;
+    transition: color .12s, background .12s;
+}
+.ca-app .ca-tab:hover { color: var(--ca-text); background: rgba(255, 255, 255, .04); text-decoration: none; }
+.ca-app .ca-tab.is-actief {
+    color: #0f0f22; font-weight: 700;
+    background: linear-gradient(180deg, var(--ca-gold), #d9a92f);
+    box-shadow: 0 -6px 16px -8px rgba(240, 192, 64, .8);
+}
+.ca-app .ca-bereik { display: flex; gap: .2rem; padding: 0 .2rem .35rem; }
+.ca-app .ca-bereikknop {
+    font-size: .78rem; font-weight: 600; padding: .3rem .7rem; border-radius: 3px;
+    color: var(--ca-dim); border: 1px solid var(--ca-border);
+}
+.ca-app .ca-bereikknop:hover { color: var(--ca-text); text-decoration: none; }
+.ca-app .ca-bereikknop.is-actief { color: #0f0f22; background: var(--ca-blue); border-color: var(--ca-blue); }
+
+/* ── Zoekbalk ─────────────────────────────────────────────────────────── */
+.ca-app .ca-zoekbalk {
+    display: flex; gap: .5rem; flex-wrap: wrap; align-items: center;
+    padding: .75rem; border-radius: 4px; margin-bottom: 1rem;
+    background: var(--ca-surface); border: 1px solid var(--ca-border);
+}
+.ca-app .ca-zoekveld {
+    flex: 1 1 320px; min-width: 0;
+    padding: .5rem .7rem; border-radius: 3px; font-size: .95rem;
+    color: var(--ca-text); background: var(--ca-surface-2);
+    border: 1px solid var(--ca-border);
+}
+.ca-app .ca-zoekveld:focus { outline: none; border-color: var(--ca-blue); }
+.ca-app .ca-select {
+    padding: .5rem .6rem; border-radius: 3px; font-size: .9rem;
+    color: var(--ca-text); background: var(--ca-surface-2); border: 1px solid var(--ca-border);
+}
+.ca-app .ca-select-breed { flex: 1 1 340px; }
+.ca-app .ca-knop {
+    padding: .5rem 1.1rem; border-radius: 3px; font-weight: 700; font-size: .9rem;
+    color: #0f0f22; background: var(--ca-gold); border: 0; cursor: pointer;
+}
+.ca-app .ca-knop:hover { background: #ffd45e; }
+
+/* Filterknoppen: een vinkje dat er als een knop uitziet, zodat je in één blik
+   ziet welke plekken meedoen. Het echte checkbox-vakje blijft bestaan voor
+   toetsenbord en schermlezers, maar staat uit beeld. */
+.ca-app .ca-filters { display: flex; gap: .35rem; flex-wrap: wrap; flex-basis: 100%; }
+.ca-app .ca-chip {
+    display: inline-flex; align-items: center; gap: .35rem; cursor: pointer;
+    padding: .3rem .75rem; border-radius: 999px; margin: 0;
+    font-size: .8rem; font-weight: 600; color: var(--ca-dim);
+    background: var(--ca-surface-2); border: 1px solid var(--ca-border);
+}
+.ca-app .ca-chip input { position: absolute; opacity: 0; width: 0; height: 0; }
+.ca-app .ca-chip:hover { color: var(--ca-text); }
+.ca-app .ca-chip.is-aan { color: #0f0f22; background: var(--ca-blue); border-color: var(--ca-blue); }
+.ca-app .ca-chip:focus-within { outline: 2px solid var(--ca-gold); outline-offset: 1px; }
+
+/* ── Meldingen ────────────────────────────────────────────────────────── */
+.ca-app .ca-waarschuwing {
+    padding: .6rem .9rem; border-radius: 4px; margin-bottom: 1rem; font-size: .88rem;
+    background: rgba(240, 192, 64, .08); border: 1px solid rgba(240, 192, 64, .35);
+    border-left: 3px solid var(--ca-gold);
+}
+.ca-app .ca-leeg {
+    padding: 2rem 1rem; text-align: center; border-radius: 4px;
+    background: var(--ca-surface); border: 1px solid var(--ca-border);
+}
+.ca-app .ca-leeg p { margin: 0 0 .4rem; }
+.ca-app .ca-telling { font-size: .85rem; color: var(--ca-dim); margin-bottom: .5rem; }
+.ca-app .ca-afgekapt { color: var(--ca-gold); }
+.ca-app .ca-voet { margin-top: 1rem; font-size: .78rem; color: var(--ca-dim); }
+
+/* ── Trefferstabel ────────────────────────────────────────────────────── */
+/* Eigen overflow-container: een lang locatiepad mag de pagina niet zijwaarts
+   laten schuiven. */
+.ca-app .ca-tabelwrap {
+    overflow-x: auto; border-radius: 4px;
+    background: var(--ca-surface); border: 1px solid var(--ca-border);
+}
+.ca-app .ca-tabel { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.ca-app .ca-tabel th {
+    text-align: left; padding: .5rem .75rem; font-size: .72rem;
+    letter-spacing: .06em; text-transform: uppercase; color: var(--ca-dim);
+    border-bottom: 1px solid var(--ca-border); white-space: nowrap;
+}
+.ca-app .ca-tabel td { padding: .4rem .75rem; border-bottom: 1px solid rgba(28, 28, 53, .6); vertical-align: top; }
+.ca-app .ca-tabel tr:last-child td { border-bottom: 0; }
+.ca-app .ca-tabel tbody tr:hover { background: rgba(255, 255, 255, .03); }
+.ca-app .ca-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ca-app .ca-item { display: flex; align-items: center; gap: .5rem; min-width: 0; }
+.ca-app .ca-icoon { width: 26px; height: 26px; border-radius: 3px; flex: none; }
+
+/* Het locatiepad. De pijl is bewust licht: de namen zijn wat je leest. */
+.ca-app .ca-plek { font-weight: 600; }
+.ca-app .ca-pijl { color: #4a4a68; margin: 0 .3rem; }
+.ca-app .ca-vlag {
+    font-size: .7rem; font-weight: 600; padding: .05rem .4rem; border-radius: 3px;
+    color: var(--ca-gold); background: rgba(240, 192, 64, .12);
+}
+.ca-app .ca-knoop { color: var(--ca-text); }
+.ca-app .ca-knoop.ca-schip { color: var(--ca-blue); }
+
+/* ── Boom ─────────────────────────────────────────────────────────────── */
+.ca-app .ca-boomkop { margin-bottom: .5rem; font-size: .95rem; }
+.ca-app .ca-boom {
+    padding: .5rem .75rem; border-radius: 4px; font-size: .88rem;
+    background: var(--ca-surface); border: 1px solid var(--ca-border);
+}
+.ca-app .ca-tak > summary {
+    display: flex; align-items: center; gap: .45rem; cursor: pointer;
+    padding: .22rem .3rem; border-radius: 3px; list-style: none;
+}
+.ca-app .ca-tak > summary::-webkit-details-marker { display: none; }
+/* Eigen driehoekje, zodat het in beide richtingen hetzelfde oogt. */
+.ca-app .ca-tak > summary::before {
+    content: "▸"; color: #5a5a80; flex: none; width: .8em;
+    transition: transform .12s;
+}
+.ca-app .ca-tak[open] > summary::before { transform: rotate(90deg); }
+.ca-app .ca-tak > summary:hover { background: rgba(255, 255, 255, .04); }
+.ca-app .ca-kinderen {
+    margin-left: .55rem; padding-left: .7rem;
+    border-left: 1px solid var(--ca-border);
+}
+.ca-app .ca-blad {
+    display: flex; align-items: center; gap: .45rem;
+    padding: .18rem .3rem .18rem 1.1rem;
+}
+.ca-app .ca-label { min-width: 0; }
+.ca-app .ca-label.is-treffer { color: var(--ca-gold); font-weight: 700; }
+.ca-app .ca-aantal { color: var(--ca-dim); font-variant-numeric: tabular-nums; }
+.ca-app .ca-inhoud { font-size: .72rem; color: #5a5a80; white-space: nowrap; }
+.ca-app .ca-eigenaar { font-size: .72rem; margin-left: auto; white-space: nowrap; }
+
+/* Een vlaglaag (Hangar, Cargo, Fleet Hangar) is een tussenkopje, geen ding dat
+   je bezit — die krijgt dus geen icoon maar de kleur van een label. */
+.ca-app .ca-tak-vlag > summary .ca-label {
+    font-size: .72rem; font-weight: 700; letter-spacing: .05em;
+    text-transform: uppercase; color: var(--ca-gold);
+}
+.ca-app .ca-tak-schip > summary .ca-label { color: var(--ca-blue); font-weight: 600; }

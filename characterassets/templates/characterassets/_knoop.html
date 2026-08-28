@@ -1,0 +1,42 @@
+{% load i18n %}
+{% comment %}
+    Eén knoop in de assetboom. Deze template roept zichzelf aan voor wat er in
+    de knoop zit — de boom is per definitie recursief (een kist in een schip in
+    een hangar), dus de template is dat ook.
+
+    <details> in plaats van JavaScript: de browser kan dit zelf, het werkt
+    zonder scripts, en een dichtgeklapte tak kost geen enkele regel aandacht.
+    Bij een actief filter staat alles open, anders zou je je eigen treffers
+    moeten opzoeken.
+{% endcomment %}
+
+{% if knoop.kinderen %}
+    <details class="ca-tak ca-tak-{{ knoop.soort }}" {% if q %}open{% endif %}>
+        <summary>
+            {% if knoop.type_id %}
+                <img class="ca-icoon" alt="" loading="lazy"
+                     src="https://images.evetech.net/types/{{ knoop.type_id }}/icon?size=32">
+            {% endif %}
+            <span class="ca-label {% if knoop.match %}is-treffer{% endif %}">{{ knoop.label }}</span>
+            {% if knoop.aantal > 1 %}<span class="ca-aantal">&times;{{ knoop.aantal|floatformat:0 }}</span>{% endif %}
+            <span class="ca-inhoud">{{ knoop.totaal|floatformat:0 }} {% translate "stuks" %}</span>
+            {% if knoop.character %}<span class="ca-dim ca-eigenaar">{{ knoop.character }}</span>{% endif %}
+        </summary>
+
+        <div class="ca-kinderen">
+            {% for kind in knoop.kinderen %}
+                {% include "characterassets/_knoop.html" with knoop=kind %}
+            {% endfor %}
+        </div>
+    </details>
+{% else %}
+    <div class="ca-blad">
+        {% if knoop.type_id %}
+            <img class="ca-icoon" alt="" loading="lazy"
+                 src="https://images.evetech.net/types/{{ knoop.type_id }}/icon?size=32">
+        {% endif %}
+        <span class="ca-label {% if knoop.match %}is-treffer{% endif %}">{{ knoop.label }}</span>
+        {% if knoop.aantal > 1 %}<span class="ca-aantal">&times;{{ knoop.aantal|floatformat:0 }}</span>{% endif %}
+        {% if knoop.character %}<span class="ca-dim ca-eigenaar">{{ knoop.character }}</span>{% endif %}
+    </div>
+{% endif %}

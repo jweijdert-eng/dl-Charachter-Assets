@@ -1,0 +1,106 @@
+{% extends "characterassets/base.html" %}
+{% load i18n %}
+
+{% block details %}
+
+    <form class="ca-zoekbalk" method="get">
+        <input type="hidden" name="bereik" value="{{ bereik }}">
+
+        <input class="ca-zoekveld" type="search" name="q" value="{{ q }}" autofocus
+               placeholder="{% translate 'Zoek een item, schip of eigen containernaam…' %}">
+
+        {% if characters|length > 1 %}
+            <select class="ca-select" name="character">
+                <option value="">{% translate "Alle characters" %}</option>
+                {% for cid, naam in characters %}
+                    <option value="{{ cid }}" {% if cid == character_id %}selected{% endif %}>{{ naam }}</option>
+                {% endfor %}
+            </select>
+        {% endif %}
+
+        <button class="ca-knop" type="submit">{% translate "Zoeken" %}</button>
+
+        {# De vinkjes zitten in hetzelfde formulier, zodat een filter zonder
+           zoekterm ook werkt: "laat alles zien wat in Asset Safety ligt". #}
+        <div class="ca-filters">
+            {% for sleutel, label, aan in filters %}
+                <label class="ca-chip {% if aan %}is-aan{% endif %}">
+                    <input type="checkbox" name="vlag" value="{{ sleutel }}" {% if aan %}checked{% endif %}>
+                    {{ label }}
+                </label>
+            {% endfor %}
+        </div>
+    </form>
+
+    {% if not gezocht %}
+        <div class="ca-leeg">
+            <p>{% translate "Typ waar je naar zoekt, of kies een plek met de knoppen hierboven." %}</p>
+            <p class="ca-dim">
+                {% translate "Er wordt ook gezocht in wat er ín iets anders ligt: in de cargo of Fleet Hangar van een schip, in een kist in een kist, en in Asset Safety. Namen die je zelf aan een schip of container gaf tellen mee als zoekterm." %}
+            </p>
+        </div>
+
+    {% elif not treffers %}
+        <div class="ca-leeg">
+            <p>{% translate "Niets gevonden." %}</p>
+            <p class="ca-dim">
+                {% if bereik == 'mijn' and mag_corp %}
+                    {% translate "Je doorzocht alleen je eigen characters — probeer het bereik op ‘Hele corp’ te zetten." %}
+                {% else %}
+                    {% translate "Let op: ESI ververst assets maar eens per uur, dus iets van net geleden staat er nog niet in." %}
+                {% endif %}
+            </p>
+        </div>
+
+    {% else %}
+        <div class="ca-telling">
+            {% blocktranslate count n=aantal %}{{ n }} plek gevonden{% plural %}{{ n }} plekken gevonden{% endblocktranslate %}
+            <span class="ca-dim">({{ stapels }} {% translate "stapels" %})</span>
+            {% if afgekapt %}
+                <span class="ca-afgekapt">{% translate "— alleen de eerste" %} {{ treffers|length }} {% translate "getoond, verfijn je zoekopdracht" %}</span>
+            {% endif %}
+        </div>
+
+        <div class="ca-tabelwrap">
+            <table class="ca-tabel">
+                <thead>
+                    <tr>
+                        <th>{% translate "Item" %}</th>
+                        <th class="ca-num">{% translate "Aantal" %}</th>
+                        <th>{% translate "Character" %}</th>
+                        <th>{% translate "Waar" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in treffers %}
+                        <tr>
+                            <td class="ca-item">
+                                <img class="ca-icoon" alt="" loading="lazy"
+                                     src="https://images.evetech.net/types/{{ h.type_id }}/icon?size=32">
+                                <span>{{ h.naam }}</span>
+                            </td>
+                            <td class="ca-num">{{ h.aantal|floatformat:0 }}</td>
+                            <td class="ca-dim">{{ h.character }}</td>
+                            <td>
+                                {# Het pad is de kern van deze plugin: niet 'je hebt
+                                   er 200' maar 'ze liggen in de Fleet Hangar van
+                                   je Orca op dat station'. #}
+                                <span class="ca-plek">{{ h.wortel.naam }}</span>
+                                {% for stap in h.pad %}
+                                    <span class="ca-pijl">›</span>
+                                    {% if stap.vlag_label %}<span class="ca-vlag">{{ stap.vlag_label }}</span>{% endif %}
+                                    <span class="ca-knoop ca-{{ stap.soort }}">{{ stap.naam }}</span>
+                                {% endfor %}
+                                {% if h.vlag_label %}
+                                    <span class="ca-pijl">›</span>
+                                    <span class="ca-vlag">{{ h.vlag_label }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+{% endblock %}
