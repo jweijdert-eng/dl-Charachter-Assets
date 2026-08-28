@@ -256,7 +256,7 @@ def assets(character_id, ververs=False):
 def item_namen(character_id, item_ids, ververs=False):
     """Namen die de speler zelf aan schepen en containers gaf.
 
-    Zonder dit heet elke Orca "Orca" en elke kist "Station Container", en dat
+    Zonder dit heet elke Bustard "Bustard" en elke kist "Station Container", en dat
     is precies het verschil tussen "hij ligt ergens" en "hij ligt in *Ammo
     Hangar 2*". ESI wil hier maximaal 1000 item-ids per call.
 

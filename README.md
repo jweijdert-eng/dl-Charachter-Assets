@@ -4,7 +4,8 @@ Alliance Auth-plugin om spullen terug te vinden. Zoekt door de assets van alle
 gekoppelde characters heen — inclusief wat er **in** iets anders ligt:
 
 * in de **cargo**, **Drone Bay** of een slot van een schip;
-* in de **Ship Hangar** en **Fleet Hangar** van een Orca, Rorqual of carrier;
+* in de **Ship Hangar** en **Fleet Hangar** van elk schip dat er een heeft
+  (Bustard, Porpoise, Rorqual, dread, carrier);
 * in een container, ook in een container in een container;
 * in **Asset Safety**.
 
@@ -20,7 +21,7 @@ omhoog loopt, ziet dus vrijwel niets op een station staan.
 
 Deze plugin loopt die keten wel, en onthoudt onderweg welke locatievlaggen hij
 passeerde. Daarom vindt het filter *Fleet Hangar* ook een stapel ammo die in
-een kist in de Fleet Hangar van een Orca ligt.
+een kist in de Fleet Hangar van een Bustard ligt.
 
 ## Installeren
 

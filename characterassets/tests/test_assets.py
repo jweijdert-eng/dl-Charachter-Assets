@@ -1,9 +1,15 @@
 """Tests voor de assetboom.
 
-Deze tests draaien op verzonnen ESI-rijen in plaats van op een echte corp. Dat
-is hier geen luiheid maar noodzaak: of er op dit moment toevallig iemand een
-schip in de Ship Hangar van z'n Orca heeft staan, mag niet bepalen of we weten
+Deze tests draaien op **verzonnen** ESI-rijen, niet op een echte corp. Dat is
+hier geen luiheid maar noodzaak: of er op dit moment toevallig iemand een schip
+in de Ship Hangar van een ander schip heeft staan, mag niet bepalen of we weten
 dat die code werkt.
+
+De Orca hieronder is dus met opzet een schip dat niemand in de corp bezit — hij
+staat er juist omdat hij én een Fleet Hangar én een Ship Hangar heeft, en dat
+tweede geval komt in de echte data (nu) nergens voor. Kom je deze namen ergens
+op een pagina tegen, dan kijk je naar testgegevens en niet naar je eigen
+spullen.
 
 De gevallen die ertoe doen zijn allemaal een vorm van "iets zit in iets dat in
 iets anders zit":

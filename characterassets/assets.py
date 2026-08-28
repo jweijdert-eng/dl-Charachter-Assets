@@ -44,7 +44,7 @@ MAX_KNOPEN = 4000
 # Locatievlaggen
 # --------------------------------------------------------------------------
 # ESI's location_flag zegt *waar in* iets een item zit. Dat is precies waar het
-# hier om draait: dezelfde Orca kan spullen in de cargo, de Fleet Hangar en de
+# hier om draait: dezelfde Bustard kan spullen in de cargo, de Fleet Hangar en de
 # Ship Hangar hebben, en dat zijn drie verschillende plekken om te zoeken.
 
 VLAG_LABEL = {
@@ -88,7 +88,7 @@ CONTAINER_VLAGGEN = {"Unlocked", "Locked", "AutoFit"}
 # De filterknoppen op de zoekpagina. Sleutel -> (label, hoe herken je 'm).
 # "keten" betekent: de vlag hoeft niet op het item zelf te zitten, hij mag ook
 # ergens boven in de keten zitten. Een stapel ammo in een kist in de Fleet
-# Hangar van een Orca hoort namelijk gewoon bij "Fleet Hangar".
+# Hangar van een Bustard hoort namelijk gewoon bij "Fleet Hangar".
 FILTERS = ("hangar", "schip", "shiphangar", "fleethangar", "safety", "container")
 FILTER_LABEL = {
     "hangar": "Hangar",
@@ -458,7 +458,7 @@ def boom(idx, wortel_id, term=""):
 
     Per locatie eerst een laag met de vlaggen (Hangar, Ship Hangar, Cargo...),
     daaronder de items. Die tussenlaag is geen opsmuk: zonder dat staat de
-    inhoud van de cargo van een Orca op één hoop met wat er in de Fleet Hangar
+    inhoud van de cargo van een Bustard op één hoop met wat er in de Fleet Hangar
     ligt, en dat zijn in het spel twee losse ruimtes.
     """
     term = (term or "").strip().lower()
