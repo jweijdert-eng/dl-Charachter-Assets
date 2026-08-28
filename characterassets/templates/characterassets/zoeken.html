@@ -87,9 +87,12 @@
                     {% for h in treffers %}
                         <tr>
                             <td class="ca-item">
-                                <img class="ca-icoon" alt="" loading="lazy"
-                                     src="https://images.evetech.net/types/{{ h.type_id }}/icon?size=32">
+                                {% if h.plaatje %}
+                                    <img class="ca-icoon" alt="" loading="lazy"
+                                         src="https://images.evetech.net/types/{{ h.type_id }}/{{ h.plaatje }}?size=32">
+                                {% else %}<span class="ca-icoon ca-geen-icoon"></span>{% endif %}
                                 <span>{{ h.naam }}</span>
+                                {% if h.kopie %}<span class="ca-bpc" title="{% translate 'Blueprint-kopie' %}">BPC</span>{% endif %}
                             </td>
                             <td class="ca-num">{{ h.aantal|floatformat:0 }}</td>
                             <td class="ca-dim">{{ h.character }}</td>

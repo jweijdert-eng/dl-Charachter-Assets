@@ -133,6 +133,22 @@
 .ca-app .ca-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .ca-app .ca-item { display: flex; align-items: center; gap: .5rem; min-width: 0; }
 .ca-app .ca-icoon { width: 26px; height: 26px; border-radius: 3px; flex: none; }
+/* Voor types waar CCP geen plaatje van heeft (SKINs). Een leeg vakje op de
+   plek waar het icoon hoort houdt de kolom recht; een kapotte <img> niet. */
+.ca-app .ca-geen-icoon {
+    display: inline-block; background: var(--ca-surface-2);
+    border: 1px dashed var(--ca-border);
+}
+
+/* Een BPO en een BPC hebben hetzelfde type_id en dus dezelfde naam. Het plaatje
+   verschilt wel (bp tegen bpc), maar dat verschil is klein op 26 pixels — dus
+   staat het er ook als tekst bij. */
+.ca-app .ca-bpc {
+    font-size: .62rem; font-weight: 700; letter-spacing: .04em; flex: none;
+    padding: .05rem .3rem; border-radius: 3px;
+    color: #7fd8ea; background: rgba(0, 180, 216, .14);
+    border: 1px solid rgba(0, 180, 216, .35);
+}
 
 /* Het locatiepad. De pijl is bewust licht: de namen zijn wat je leest. */
 .ca-app .ca-plek { font-weight: 600; }

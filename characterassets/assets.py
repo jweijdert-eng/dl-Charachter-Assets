@@ -221,6 +221,10 @@ def bouw(characters, ververs=False):
                 "loc_id": a.get("location_id"),
                 "loc_type": a.get("location_type") or "",
                 "singleton": bool(a.get("is_singleton")),
+                # ESI zegt zelf of dit een blueprint-kopie is. Dat is de enige
+                # manier om een BPC van een BPO te onderscheiden: ze delen
+                # hetzelfde type_id en dus dezelfde naam.
+                "kopie": bool(a.get("is_blueprint_copy")),
                 "character_id": cid,
                 "character": idx.chars.get(cid, str(cid)),
             }
@@ -238,6 +242,7 @@ def bouw(characters, ververs=False):
         rij["type_naam"] = typenamen.get(rij["type_id"]) or f"Type {rij['type_id']}"
 
     _eigen_namen(idx, ververs)
+    _plaatjes(idx, typenamen)
 
     # --- 3. wat is een schip, wat een container? --------------------------
     soorten = _soorten(idx)
@@ -311,6 +316,62 @@ def _eigen_namen(idx, ververs):
                 rij["naam"] = f"{rij['type_naam']} \"{naam}\""
 
 
+# Blueprints hebben op images.evetech.net geen `icon` maar een eigen variant:
+# `bp` voor het origineel, `bpc` voor een kopie. Vraag je er toch `icon` op,
+# dan komt er een **400** terug en staat er een kapot plaatje op de pagina.
+# Reaction Formulas zitten in dezelfde categorie en doen precies hetzelfde.
+BLUEPRINT_ACHTERVOEGSELS = (" blueprint", " reaction formula")
+
+# SKINs hebben op de plaatjesserver helemaal niets: elke variant geeft een 404.
+# Ze krijgen daarom geen <img> maar een leeg vakje — een gebroken-afbeeldingicoon
+# op elke SKIN-regel ziet eruit alsof de plugin stuk is.
+SKIN_ACHTERVOEGSEL = " skin"
+
+
+def _plaatjes(idx, typenamen):
+    """Zet per rij de juiste afbeeldingsvariant voor images.evetech.net.
+
+    Drie soorten: blueprints (`bp`), blueprint-kopieën (`bpc`) en de rest
+    (`icon`). Vraag je `icon` op voor een blueprint, dan komt er een **400**
+    terug en staat er een kapot plaatje op de pagina — dat is precies wat hier
+    misging. Lege string betekent: helemaal geen afbeelding tonen.
+    """
+    bp_types = {tid for tid, naam in typenamen.items()
+                if naam.lower().endswith(BLUEPRINT_ACHTERVOEGSELS)}
+    # Tweede mening uit eveuniverse (categorie 9 = Blueprint), voor zover het
+    # al in de database staat. Net als bij de schepen: puur uit de DB, nooit
+    # een ESI-call, want dit draait bij elke zoekopdracht.
+    bp_types |= _types_in_categorie(set(typenamen) - bp_types, 9)
+
+    skins = {tid for tid, naam in typenamen.items()
+             if naam.lower().endswith(SKIN_ACHTERVOEGSEL)}
+    skins |= _types_in_categorie(set(typenamen) - skins - bp_types, 91)
+
+    for rij in idx.rijen:
+        if rij["type_id"] in skins:
+            rij["plaatje"] = ""
+        elif rij["kopie"]:
+            rij["plaatje"] = "bpc"
+        elif rij["type_id"] in bp_types:
+            rij["plaatje"] = "bp"
+        else:
+            rij["plaatje"] = "icon"
+
+
+def _types_in_categorie(type_ids, categorie_id):
+    """Welke van deze types in die eveuniverse-categorie zitten (DB-only)."""
+    if not type_ids:
+        return set()
+    try:
+        from eveuniverse.models import EveType
+
+        return set(EveType.objects
+                   .filter(id__in=list(type_ids), eve_group__eve_category_id=categorie_id)
+                   .values_list("id", flat=True))
+    except Exception:  # noqa: BLE001 — eveuniverse is bijvangst, geen eis
+        return set()
+
+
 def _soorten(idx):
     """{item_id: 'schip'|'container'} voor alles waar iets in zit.
 
@@ -351,16 +412,7 @@ def _schip_types(type_ids):
     geladen, dan komen we hier gewoon met minder terug. De vlaggen hierboven
     doen het echte werk.
     """
-    if not type_ids:
-        return set()
-    try:
-        from eveuniverse.models import EveType
-
-        return set(EveType.objects
-                   .filter(id__in=list(type_ids), eve_group__eve_category_id=6)
-                   .values_list("id", flat=True))
-    except Exception:  # noqa: BLE001 — eveuniverse is een nette bijvangst, geen eis
-        return set()
+    return _types_in_categorie(type_ids, 6)
 
 
 def _keten(loc_id, loc_type, memo, idx, soorten):
@@ -507,13 +559,19 @@ def _treffers(idx, term, filters, character_id=None, wortel=None):
             continue
 
         totaal += 1
-        sleutel = (rij["character_id"], rij["loc_id"], rij["type_id"], rij["vlag"])
+        # De kopie hoort in de sleutel: een BPO en een BPC delen hetzelfde
+        # type_id en dus dezelfde naam, maar het zijn twee verschillende dingen
+        # om op één regel bij elkaar op te tellen.
+        sleutel = (rij["character_id"], rij["loc_id"], rij["type_id"], rij["vlag"],
+                   rij["kopie"])
         hit = samen.get(sleutel)
         if hit:
             hit["aantal"] += rij["aantal"]
             continue
         samen[sleutel] = {
             "type_id": rij["type_id"],
+            "plaatje": rij["plaatje"],
+            "kopie": rij["kopie"],
             "naam": rij["naam"],
             "type_naam": rij["type_naam"],
             "aantal": rij["aantal"],
@@ -649,7 +707,8 @@ def _voeg_stapels_samen(knopen):
         if k["kinderen"] or k["eigen_naam"]:
             uit.append(k)
             continue
-        sleutel = (k["type_id"], k["character"])
+        # Ook hier de kopie erbij: een BPO en een BPC heten hetzelfde.
+        sleutel = (k["type_id"], k["character"], k["plaatje"])
         eerder = samen.get(sleutel)
         if eerder:
             eerder["aantal"] += k["aantal"]
@@ -692,6 +751,8 @@ def _knoop(idx, rij, woorden, teller):
         "label": rij["naam"],
         "soort": rij.get("soort") or "item",
         "type_id": rij["type_id"],
+        "plaatje": rij["plaatje"],
+        "kopie": rij["kopie"],
         "aantal": rij["aantal"],
         "character": rij["character"],
         "eigen_naam": rij["eigen_naam"],

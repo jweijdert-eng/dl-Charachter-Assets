@@ -54,12 +54,19 @@ RIJEN = [
     # één regel te eindigen.
     (300, 34, 1000, "Hangar", 60003760, "station", False),
     (301, 34, 2000, "Hangar", 60003760, "station", False),
+
+    # Een blueprint-origineel en een kopie van hetzelfde type, op dezelfde plek.
+    (400, 687, 1, "Hangar", 60003760, "station", True),
+    (401, 687, 3, "Hangar", 60003760, "station", True),
 ]
+
+# item_id's die volgens ESI een blueprint-kópie zijn.
+KOPIEEN = {401}
 
 NAMEN = {
     28606: "Orca", 17366: "Station Container", 12608: "Scourge Fury Heavy Missile",
     587: "Rifter", 34: "Tritanium", 60: "Asset Safety Wrap", 596: "Impairor",
-    3634: "Civilian Gatling Pulse Laser",
+    3634: "Civilian Gatling Pulse Laser", 687: "Caracal Blueprint",
     60003760: "Jita IV - Moon 4 - Caldari Navy Assembly Plant",
     60014683: "Gergish IX - Moon 10 - Wiyrkomi Corporation Factory",
 }
@@ -71,11 +78,18 @@ def nep_assets(character_id, ververs=False):
     rijen = [{
         "item_id": i, "type_id": t, "quantity": q, "location_flag": v,
         "location_id": lid, "location_type": lt, "is_singleton": s,
+        "is_blueprint_copy": i in KOPIEEN,
     } for i, t, q, v, lid, lt, s in RIJEN]
     return rijen, "Fri, 28 Aug 2026 10:00:00 GMT"
 
 
-class AssetboomTest(TestCase):
+class NepIndex:
+    """Zet een index op uit de verzonnen rijen hierboven.
+
+    Losse mixin en geen TestCase, anders draait elke testklasse die hem
+    hergebruikt ook alle tests van de ander nog eens over.
+    """
+
     def setUp(self):
         chars = [NepCharacter(1, "Testpiloot")]
         patches = [
@@ -95,6 +109,9 @@ class AssetboomTest(TestCase):
     def _hits(self, term="", filters=None):
         treffers, _, _ = assets.zoek(self.idx, term, filters or set())
         return treffers
+
+
+class AssetboomTest(NepIndex, TestCase):
 
     # -- de keten ---------------------------------------------------------
 
@@ -246,3 +263,34 @@ class AssetboomTest(TestCase):
         treffers, _, _ = assets.zoek(self.idx, "scourge missile")
         self.assertEqual([h["type_naam"] for h in treffers],
                          ["Scourge Fury Heavy Missile"])
+
+
+class BlueprintPlaatjeTest(NepIndex, TestCase):
+    """Blueprints hebben op images.evetech.net geen `icon`.
+
+    Vraag je die toch op, dan komt er een **400** terug en staat er een kapot
+    plaatje op de pagina. Het origineel is `bp`, de kopie `bpc`.
+    """
+
+    def test_blueprint_krijgt_de_bp_variant(self):
+        rij = self.idx.per_item[400]
+        self.assertEqual(rij["plaatje"], "bp")
+
+    def test_kopie_krijgt_de_bpc_variant(self):
+        rij = self.idx.per_item[401]
+        self.assertEqual(rij["plaatje"], "bpc")
+
+    def test_gewoon_item_houdt_icon(self):
+        self.assertEqual(self.idx.per_item[300]["plaatje"], "icon")
+
+    def test_origineel_en_kopie_gaan_niet_op_een_hoop(self):
+        """Ze delen type_id en naam, dus optellen ligt op de loer."""
+        treffers = self._hits("Caracal")
+        self.assertEqual(len(treffers), 2)
+        self.assertEqual({(h["plaatje"], h["aantal"]) for h in treffers},
+                         {("bp", 1), ("bpc", 3)})
+
+    def test_ook_in_de_boom_gescheiden(self):
+        knopen, _ = assets.boom(self.idx, 60003760)
+        bps = [k for k in knopen[0]["kinderen"] if k["label"] == "Caracal Blueprint"]
+        self.assertEqual(sorted(k["plaatje"] for k in bps), ["bp", "bpc"])
