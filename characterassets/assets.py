@@ -117,16 +117,6 @@ PLAATS_WOORDEN = (
 )
 
 
-def plek_voorbeelden():
-    """De plekwoorden om onder de zoekbalk te tonen.
-
-    Het eerste woord per plek is het duidelijkste; de rest zijn synoniemen die
-    wel werken maar niemand hoeft te lezen. Een zoekbalk die stiekem meer kan
-    dan hij laat zien is een zoekbalk die niemand zo gebruikt.
-    """
-    return [varianten[0] for _, varianten in PLAATS_WOORDEN]
-
-
 def lees_plaats(term):
     """Haal plek-woorden uit een zoekterm.
 

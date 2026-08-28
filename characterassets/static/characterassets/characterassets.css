@@ -80,17 +80,6 @@
 }
 .ca-app .ca-knop:hover { background: #ffd45e; }
 
-/* Het regeltje onder de zoekbalk dat de plekwoorden noemt. Onopvallend, maar
-   het moet er staan: een zoekbalk die stiekem meer kan dan hij toont, wordt
-   door niemand zo gebruikt. */
-.ca-app .ca-hint {
-    flex-basis: 100%; font-size: .76rem; color: var(--ca-dim);
-}
-.ca-app .ca-hint code {
-    color: var(--ca-blue); background: var(--ca-surface-2);
-    padding: .05rem .35rem; border-radius: 3px; font-size: .95em;
-}
-
 /* En de regel bóven de resultaten, die zegt wat er met je zoekterm gebeurd is.
    Zonder dat doet de pagina stilzwijgend iets anders dan je typte. */
 .ca-app .ca-uitleg {

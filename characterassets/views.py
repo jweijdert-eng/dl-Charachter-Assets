@@ -94,7 +94,6 @@ def zoeken(request):
         "stapels": rijen,
         "afgekapt": aantal > len(treffers),
         "gezocht": bool(term or gekozen),
-        "plekwoorden": assets.plek_voorbeelden(),
     })
     return render(request, "characterassets/zoeken.html", ctx)
 
