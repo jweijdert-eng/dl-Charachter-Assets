@@ -57,6 +57,15 @@
             </div>
         {% endif %}
 
+        {% if onvolledig %}
+            <div class="ca-waarschuwing">
+                {% blocktranslate count n=onvolledig|length %}Van dit character kon ESI niet alles geven{% plural %}Van deze characters kon ESI niet alles geven{% endblocktranslate %}
+                — {% translate "wat je ziet is dus mogelijk niet alles." %}
+                <span class="ca-dim">{{ onvolledig|join:", "|truncatechars:220 }}</span>
+                <a href="?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}ververs=1">{% translate "Opnieuw proberen" %}</a>
+            </div>
+        {% endif %}
+
         {% block details %}{% endblock %}
 
         <div class="ca-voet">

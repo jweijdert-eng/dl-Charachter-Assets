@@ -10,5 +10,5 @@ locatie). Zonder de keten omhoog te lopen lijkt vrijwel niets ergens te liggen.
 Die keten is dan ook het hart van deze plugin.
 """
 
-__version__ = "1.1.2"
+__version__ = "1.2.0"
 __title__ = "Character Assets"

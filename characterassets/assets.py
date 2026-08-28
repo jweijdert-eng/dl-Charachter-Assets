@@ -178,6 +178,7 @@ class Index:
         self.chars = {}             # character_id -> naam
         self.bijgewerkt = ""        # oudste last-modified van ESI
         self.zonder_token = []      # characters waar we niet bij konden
+        self.onvolledig = []        # characters waarvan ESI maar de helft gaf
 
 
 def bouw(characters, ververs=False):
@@ -195,10 +196,14 @@ def bouw(characters, ververs=False):
     ruw = _haal_parallel([c.character_id for c in met], ververs)
 
     # --- 1. platte rijen, met character erbij -----------------------------
-    tijden = []
-    for cid, (rijen, bijgewerkt) in ruw.items():
+    tijden, onvolledig = [], []
+    for cid, (rijen, bijgewerkt, volledig) in ruw.items():
         if bijgewerkt:
             tijden.append(bijgewerkt)
+        if not volledig:
+            # ESI gaf maar een deel (meestal na een 420). Dat mag niet
+            # stilletjes als "dit is alles" op het scherm belanden.
+            onvolledig.append(idx.chars.get(cid, str(cid)))
         for a in rijen:
             item_id = a.get("item_id")
             if not item_id:
@@ -221,6 +226,7 @@ def bouw(characters, ververs=False):
             idx.rijen.append(rij)
             idx.per_item[item_id] = rij
     idx.bijgewerkt = min(tijden) if tijden else ""
+    idx.onvolledig = sorted(onvolledig)
 
     for rij in idx.rijen:
         if rij["loc_type"] == "item" and rij["loc_id"] in idx.per_item:
@@ -240,6 +246,9 @@ def bouw(characters, ververs=False):
     # --- 4. keten omhoog --------------------------------------------------
     memo = {}
     wortel_items = defaultdict(int)
+    # Wie heeft er spullen op welke wortel? Alleen om straks de juiste tokens
+    # te kiezen voor de structuurnamen — zie esi.structuur_namen.
+    wortel_eigenaars = defaultdict(set)
     for rij in idx.rijen:
         wortel, pad, vlaggen, in_schip = _keten(
             rij["loc_id"], rij["loc_type"], memo, idx, soorten)
@@ -251,8 +260,10 @@ def bouw(characters, ververs=False):
         rij["soort"] = soorten.get(rij["item_id"], "item")
         rij["groepen"] = _groepen(rij)
         wortel_items[wortel] += 1
+        wortel_eigenaars[wortel].add(rij["character_id"])
 
-    _wortel_namen(idx, wortel_items, [c.character_id for c in met])
+    _wortel_namen(idx, wortel_items, [c.character_id for c in met],
+                  wortel_eigenaars)
     return idx
 
 
@@ -271,7 +282,7 @@ def _haal_parallel(character_ids, ververs):
             return cid, esi.assets(cid, ververs)
         except Exception:  # noqa: BLE001 — één character mag de rest niet slopen
             logger.exception("Assets: ophalen mislukt voor %s", cid)
-            return cid, ([], "")
+            return cid, ([], "", False)
         finally:
             connections.close_all()
 
@@ -456,12 +467,17 @@ def _groepen(rij):
     return uit
 
 
-def _wortel_namen(idx, wortel_items, character_ids):
+def _wortel_namen(idx, wortel_items, character_ids, eigenaars=None):
     """Namen van de plekken waar de ketens uitkomen.
 
     Drie soorten wortels, en ze komen alle drie ergens anders vandaan:
     NPC-stations en systemen lossen publiek op via /universe/names/,
     spelersstructuren alleen met een token van iemand die er mag docken.
+
+    `eigenaars` zegt wiens spullen er op elke wortel liggen. Dat is voor
+    structuren geen detail: met het token van iemand die er zelf een hangar
+    heeft is één call genoeg, terwijl blind alle tokens langslopen een reeks
+    403's oplevert — en daar loopt het ESI-foutbudget op leeg.
     """
     stations, structuren = [], []
     for wid in wortel_items:
@@ -472,7 +488,7 @@ def _wortel_namen(idx, wortel_items, character_ids):
         (structuren if wid >= 1_000_000_000_000 else stations).append(wid)
 
     namen = esi.namen(stations)
-    namen.update(esi.structuur_namen(structuren, character_ids))
+    namen.update(esi.structuur_namen(structuren, character_ids, eigenaars))
 
     for wid, aantal in wortel_items.items():
         naam = namen.get(wid) or ""

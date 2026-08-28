@@ -35,9 +35,10 @@ def _basis(request):
     """De context die beide pagina's delen: bereik, characters, index."""
     bereik, mag_corp = _bereik(request)
     characters = _characters(request, bereik)
+    # "Opnieuw ophalen" gaat langs de cache heen, maar gooit hem niet eerst
+    # leeg: als ESI ons dan afwijst (420) staat de pagina leeg terwijl er
+    # prima gegevens wáren. esi.assets zet de nieuwe alleen bij succes.
     ververs = request.GET.get("ververs") == "1"
-    if ververs:
-        esi.leeg_cache([c.character_id for c in characters])
 
     idx = assets.bouw(characters, ververs=ververs)
 
@@ -58,6 +59,7 @@ def _basis(request):
         "characters": sorted(idx.chars.items(), key=lambda kv: kv[1].lower()),
         "character_id": character_id,
         "zonder_token": idx.zonder_token,
+        "onvolledig": idx.onvolledig,
         "bijgewerkt": idx.bijgewerkt,
         "aantal_items": len(idx.rijen),
     }

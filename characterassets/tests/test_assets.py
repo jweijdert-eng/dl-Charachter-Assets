@@ -80,7 +80,7 @@ def nep_assets(character_id, ververs=False):
         "location_id": lid, "location_type": lt, "is_singleton": s,
         "is_blueprint_copy": i in KOPIEEN,
     } for i, t, q, v, lid, lt, s in RIJEN]
-    return rijen, "Fri, 28 Aug 2026 10:00:00 GMT"
+    return rijen, "Fri, 28 Aug 2026 10:00:00 GMT", True
 
 
 class NepIndex:

@@ -41,12 +41,18 @@ def warm_cache():
                       .values_list("character_id", flat=True))
               .values_list("character_id", flat=True))
 
-    gelukt = 0
+    gelukt, overgeslagen = 0, 0
     for character_id in ids:
         try:
-            rijen, _ = esi.assets(character_id, ververs=True)
+            rijen, _, volledig = esi.assets(character_id, ververs=True)
         except Exception:  # noqa: BLE001 — één character mag de rest niet stoppen
             logger.exception("Character Assets: ophalen mislukt voor %s", character_id)
+            continue
+        if not volledig:
+            # Meestal het ESI-foutbudget. Doorbeuken langs tachtig characters
+            # houdt die limiet alleen maar in stand; de volgende ronde is over
+            # een uur en dan is het budget allang weer aangevuld.
+            overgeslagen += 1
             continue
         if rijen:
             gelukt += 1
@@ -57,6 +63,6 @@ def warm_cache():
             eigen = {r["item_id"] for r in rijen if r.get("is_singleton")}
             esi.item_namen(character_id, ouders & eigen, ververs=True)
 
-    logger.info("Character Assets: cache bijgewerkt voor %s van %s characters",
-                gelukt, len(ids))
+    logger.info("Character Assets: cache bijgewerkt voor %s van %s characters "
+                "(%s onvolledig)", gelukt, len(ids), overgeslagen)
     return gelukt

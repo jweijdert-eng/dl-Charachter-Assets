@@ -108,5 +108,28 @@ CELERYBEAT_SCHEDULE["characterassets_warm_cache"] = {
 ```
 
 Eens per uur is genoeg en ook het maximum dat zin heeft: **ESI ververst z'n
-eigen assets-antwoord maar eens per uur.** De knop "Opnieuw ophalen" gooit onze
-cache weg, maar kan CCP niet sneller laten zijn.
+eigen assets-antwoord maar eens per uur.** De knop "Opnieuw ophalen" haalt langs
+onze cache heen op, maar kan CCP niet sneller laten zijn.
+
+## Als ESI 420 geeft (error limited)
+
+ESI telt fouten: ongeveer honderd per zestig seconden. Ga je eroverheen, dan
+krijg je **420** op *alles* — ook op calls die het prima zouden doen, en ook in
+de rest van Alliance Auth, want dat budget geldt per IP en niet per plugin.
+
+Sinds 1.2.0 doet de plugin drie dingen om daar niet in te belanden:
+
+- **De teller wordt bij elk antwoord gelezen**, ook bij foute. Zakt het budget
+  onder de twintig, dan legt de plugin zichzelf stil tot de teller weer
+  bijgevuld is — gedeeld tussen de webserver, de Celery-worker en alle threads.
+- **Structuurnamen vragen we aan de juiste piloot.** Wie er spullen heeft
+  liggen mag er docken; die vragen we eerst, en hoogstens nog twee anderen
+  daarna. Blind alle tokens langs alle structuren halen is honderden 403's, en
+  precies zo maak je dat foutbudget op.
+- **Een 420 wordt niet opnieuw geprobeerd.** Dat is geen hik maar een straf, en
+  het nog eens proberen maakt de straf langer.
+
+Kwam er tóch niet alles binnen, dan staat dat boven de pagina in plaats van dat
+je een halve hangar voor de hele aanziet — en die halve lijst wordt niet een uur
+lang als de waarheid bewaard. Een mislukte verversing laat de vorige gegevens
+staan; oud maar waar is beter dan leeg.
