@@ -82,12 +82,6 @@
                             <td class="ca-num">{{ h.aantal|floatformat:0 }}</td>
                             <td class="ca-dim">{{ h.character }}</td>
                             <td>
-                                {# Het pad is de kern van deze plugin: niet 'je hebt
-                                   er 200' maar 'ze liggen in de Fleet Hangar van
-                                   je Bustard op dat station'. Ligt iets gewoon
-                                   los in de stationhangar, dan is het pad ook
-                                   echt maar twee stappen lang — daar zit dan
-                                   niets tussen. #}
                                 <span class="ca-plek">{{ h.wortel.naam }}</span>
                                 {% for stap in h.pad %}
                                     <span class="ca-pijl">›</span>
