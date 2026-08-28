@@ -234,7 +234,7 @@
 /* Zolang we het aantal characters nog niet weten valt er niets te vullen. Een
    volle balk zou dan "klaar" betekenen, dus schuift er een streepje heen en
    weer tot de eerste telling binnen is. */
-.ca-app .ca-laden-balk .progress-bar.is-onbekend {
+.ca-app .progress-bar.is-onbekend {
     width: 35%; transition: none;
     animation: ca-schuif 1.5s ease-in-out infinite;
 }
@@ -243,7 +243,7 @@
     100% { margin-left: 100%; }
 }
 @media (prefers-reduced-motion: reduce) {
-    .ca-app .ca-laden-balk .progress-bar.is-onbekend { animation-duration: 4s; }
+    .ca-app .progress-bar.is-onbekend { animation-duration: 4s; }
 }
 .ca-app .ca-laden-balk.is-mis .progress-bar { background: var(--ca-red); }
 .ca-app .ca-laden-teller {
@@ -256,3 +256,22 @@
     color: #0f0f22; background: var(--ca-gold);
 }
 .ca-app .ca-laden-knop:hover { text-decoration: none; filter: brightness(1.08); }
+
+/* ── Bezig-balk ───────────────────────────────────────────────────────────
+   Ook een warme zoekopdracht is een volledige paginalading: je typt, drukt
+   enter, en er gebeurt een seconde lang zichtbaar niets. Deze balk gaat aan
+   zodra je zoekt of ergens heen klikt en verdwijnt vanzelf met de oude pagina.
+
+   `visibility` en geen `display`: zo houdt de balk zijn plek en springt de
+   pagina niet op het moment dat hij aangaat. */
+.ca-app .ca-bezig {
+    height: 4px; margin: -.6rem 0 .85rem; border-radius: 999px;
+    background: var(--ca-surface-2); border: 1px solid var(--ca-border);
+    visibility: hidden;
+}
+.ca-app .ca-bezig.is-aan { visibility: visible; }
+
+/* Blauw en niet goud: de tabbladen hebben al een gouden onderrand, en daar
+   valt een gouden streepje pal onder gewoon tegen weg. */
+.ca-app .ca-bezig .progress-bar { background-color: var(--ca-blue); }
+

@@ -266,3 +266,25 @@ class LaadschermViewTest(TestCase):
         r = self.client.get("/characterassets/zoeken/?ververs=1")
 
         self.assertIn("characterassets/laden.html", [t.name for t in r.templates])
+
+    def test_zoekpagina_heeft_de_bezig_balk(self):
+        """Ook een warme zoekopdracht is een paginalading; die mag je zien."""
+        cache.set("ca_assets_1", [])
+        for p in self._patches():
+            p.start()
+            self.addCleanup(p.stop)
+
+        r = self.client.get("/characterassets/zoeken/?q=tritanium")
+
+        self.assertContains(r, 'id="ca-bezig"')
+        self.assertContains(r, "is-onbekend")
+
+    def test_boompagina_heeft_de_bezig_balk_ook(self):
+        cache.set("ca_assets_1", [])
+        for p in self._patches():
+            p.start()
+            self.addCleanup(p.stop)
+
+        r = self.client.get("/characterassets/boom/")
+
+        self.assertContains(r, 'id="ca-bezig"')

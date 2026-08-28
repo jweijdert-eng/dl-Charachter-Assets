@@ -48,6 +48,11 @@
             {% endif %}
         </div>
 
+        <div class="progress ca-bezig" id="ca-bezig" role="progressbar" aria-hidden="true"
+             aria-label="{% translate 'Bezig met laden' %}" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar progress-bar-striped progress-bar-animated is-onbekend"></div>
+        </div>
+
         {% if zonder_token %}
             <div class="ca-waarschuwing">
                 <strong>{{ zonder_token|length }}</strong>
@@ -73,4 +78,30 @@
             <a href="?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}ververs=1">{% translate "Opnieuw ophalen" %}</a>
         </div>
     </div>
+
+<script>
+(function () {
+    var app = document.querySelector(".ca-app");
+    var balk = document.getElementById("ca-bezig");
+    if (!app || !balk) { return; }
+
+    function aan() { balk.classList.add("is-aan"); balk.removeAttribute("aria-hidden"); }
+    function uit() { balk.classList.remove("is-aan"); balk.setAttribute("aria-hidden", "true"); }
+
+    app.addEventListener("submit", aan);
+
+    app.addEventListener("click", function (e) {
+        var a = e.target.closest("a[href]");
+        if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey ||
+            e.shiftKey || a.target === "_blank") { return; }
+        var href = a.getAttribute("href");
+        if (!href || href.charAt(0) === "#" || /^[a-z]+:/i.test(href)) { return; }
+        aan();
+    });
+
+    // Terug-knop: de browser toont de oude pagina uit z'n cache, en die had de
+    // balk aan staan toen je wegklikte.
+    window.addEventListener("pageshow", uit);
+})();
+</script>
 {% endblock %}
