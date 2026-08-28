@@ -12,6 +12,23 @@ gekoppelde characters heen — inclusief wat er **in** iets anders ligt:
 Naast de zoeklijst zit er een boomweergave in: klap een station open en blader
 door de hangars, schepen en kisten die daar staan.
 
+## Zoeken op een plek
+
+Er zijn geen filterknoppen; een plek is gewoon een zoekterm. `fleet hangar`,
+`ship hangar`, `asset safety`, `hangar`, `schip` en `kist` worden herkend, en
+je mag ze met een itemnaam combineren: **`smartbomb in fleet hangar`**.
+
+Dat raden gaat soms mis, want plekwoorden zitten ook in itemnamen — er bestaat
+een *Station Container*, en Asset Safety levert een *Asset Safety Wrap* op.
+Daarom **vervangt** een plek de naamzoektocht nooit maar komt hij eroverheen:
+je krijgt alles op die plek én alles met die tekst in de naam. Je verliest dus
+nooit een treffer door hoe de plugin een woord uitlegt, en boven de resultaten
+staat wat er met je zoekterm gebeurd is.
+
+Wil je uitsluitend op naam zoeken, zet de term dan tussen aanhalingstekens:
+`"asset safety wrap"`. En `?vlag=fleethangar` in de URL filtert hard op één
+plek — handig om een link te delen.
+
 ## Waarom dit meer is dan een lijstje
 
 ESI geeft assets als een platte lijst waarin de "locatie" van een item meestal

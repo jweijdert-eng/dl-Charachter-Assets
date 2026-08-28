@@ -80,20 +80,24 @@
 }
 .ca-app .ca-knop:hover { background: #ffd45e; }
 
-/* Filterknoppen: een vinkje dat er als een knop uitziet, zodat je in één blik
-   ziet welke plekken meedoen. Het echte checkbox-vakje blijft bestaan voor
-   toetsenbord en schermlezers, maar staat uit beeld. */
-.ca-app .ca-filters { display: flex; gap: .35rem; flex-wrap: wrap; flex-basis: 100%; }
-.ca-app .ca-chip {
-    display: inline-flex; align-items: center; gap: .35rem; cursor: pointer;
-    padding: .3rem .75rem; border-radius: 999px; margin: 0;
-    font-size: .8rem; font-weight: 600; color: var(--ca-dim);
-    background: var(--ca-surface-2); border: 1px solid var(--ca-border);
+/* Het regeltje onder de zoekbalk dat de plekwoorden noemt. Onopvallend, maar
+   het moet er staan: een zoekbalk die stiekem meer kan dan hij toont, wordt
+   door niemand zo gebruikt. */
+.ca-app .ca-hint {
+    flex-basis: 100%; font-size: .76rem; color: var(--ca-dim);
 }
-.ca-app .ca-chip input { position: absolute; opacity: 0; width: 0; height: 0; }
-.ca-app .ca-chip:hover { color: var(--ca-text); }
-.ca-app .ca-chip.is-aan { color: #0f0f22; background: var(--ca-blue); border-color: var(--ca-blue); }
-.ca-app .ca-chip:focus-within { outline: 2px solid var(--ca-gold); outline-offset: 1px; }
+.ca-app .ca-hint code {
+    color: var(--ca-blue); background: var(--ca-surface-2);
+    padding: .05rem .35rem; border-radius: 3px; font-size: .95em;
+}
+
+/* En de regel bóven de resultaten, die zegt wat er met je zoekterm gebeurd is.
+   Zonder dat doet de pagina stilzwijgend iets anders dan je typte. */
+.ca-app .ca-uitleg {
+    padding: .45rem .75rem; border-radius: 4px; margin-bottom: .5rem; font-size: .82rem;
+    background: rgba(0, 180, 216, .07); border: 1px solid rgba(0, 180, 216, .28);
+    border-left: 3px solid var(--ca-blue);
+}
 
 /* ── Meldingen ────────────────────────────────────────────────────────── */
 .ca-app .ca-waarschuwing {

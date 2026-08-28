@@ -181,3 +181,68 @@ class AssetboomTest(TestCase):
         knopen, _ = assets.boom(self.idx, 60003760)
         self.assertEqual(knopen[0]["aantal"], 0)
         self.assertGreater(knopen[0]["totaal"], 0)
+
+    # -- een plek als zoekterm --------------------------------------------
+
+    def test_plekwoord_uit_de_term_gehaald(self):
+        rest, plaatsen, woorden = assets.lees_plaats("tritanium in fleet hangar")
+        self.assertEqual(plaatsen, {"fleethangar"})
+        self.assertEqual(woorden, ["fleet hangar"])
+        self.assertEqual(rest, "tritanium in")
+
+    def test_fleet_hangar_wint_van_het_losse_woord_hangar(self):
+        """Anders leest 'fleet hangar' als 'hangar' en klopt het filter niet."""
+        _, plaatsen, _ = assets.lees_plaats("fleet hangar")
+        self.assertEqual(plaatsen, {"fleethangar"})
+
+    def test_plekwoord_alleen_op_woordgrens(self):
+        """'kist' mag niet in 'kistrand' vallen."""
+        _, plaatsen, _ = assets.lees_plaats("kistrand")
+        self.assertEqual(plaatsen, set())
+
+    def test_zoeken_op_een_plek_zonder_itemnaam(self):
+        treffers, _, _, uitleg = assets.zoek_slim(self.idx, "fleet hangar")
+        self.assertIn("Scourge Fury Heavy Missile", [h["type_naam"] for h in treffers])
+        self.assertEqual(uitleg["plaatsen"], ["Fleet Hangar"])
+
+    def test_plek_vervangt_de_naamzoektocht_niet(self):
+        """De valkuil: 'safety' is ook de naam van de Asset Safety Wrap.
+
+        Zoek je erop, dan moet je én de inhoud van Asset Safety krijgen én het
+        item dat zo heet — anders verlies je treffers door hoe wij een woord
+        uitleggen.
+        """
+        treffers, _, _, uitleg = assets.zoek_slim(self.idx, "safety")
+        namen = [h["type_naam"] for h in treffers]
+        self.assertIn("Asset Safety Wrap", namen)          # op naam
+        self.assertIn("Civilian Gatling Pulse Laser", namen)  # op plek
+        self.assertEqual(uitleg["plaatsen"], ["Asset Safety"])
+        self.assertGreater(uitleg["in_plaats"], 0)
+
+    def test_aanhalingstekens_zoeken_alleen_op_naam(self):
+        treffers, _, _, uitleg = assets.zoek_slim(self.idx, '"safety"')
+        self.assertEqual([h["type_naam"] for h in treffers], ["Asset Safety Wrap"])
+        self.assertEqual(uitleg, {"letterlijk": "safety"})
+
+    def test_gewone_itemnaam_blijft_een_gewone_zoekterm(self):
+        treffers, _, _, uitleg = assets.zoek_slim(self.idx, "tritanium")
+        self.assertEqual(uitleg, {})
+        self.assertTrue(treffers)
+
+    def test_item_plus_plek_in_een_zin(self):
+        """Het losse 'in' mag de zoekterm niet slopen.
+
+        Zonder stopwoorden blijft "tritanium in" over als deelstring, en geen
+        enkel item heet zo — dan geeft een volstrekt redelijke zoekopdracht nul
+        treffers.
+        """
+        treffers, _, _, uitleg = assets.zoek_slim(self.idx, "tritanium in ship hangar")
+        self.assertEqual(uitleg["plaatsen"], ["Ship Hangar"])
+        self.assertEqual([h["type_naam"] for h in treffers], ["Tritanium"])
+        self.assertEqual(treffers[0]["aantal"], 1200)
+
+    def test_woorden_hoeven_niet_aan_elkaar_te_staan(self):
+        """"heavy missile" moet de Scourge Fury Heavy Missile vinden."""
+        treffers, _, _ = assets.zoek(self.idx, "scourge missile")
+        self.assertEqual([h["type_naam"] for h in treffers],
+                         ["Scourge Fury Heavy Missile"])

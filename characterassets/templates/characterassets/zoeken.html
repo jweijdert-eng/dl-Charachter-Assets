@@ -7,7 +7,7 @@
         <input type="hidden" name="bereik" value="{{ bereik }}">
 
         <input class="ca-zoekveld" type="search" name="q" value="{{ q }}" autofocus
-               placeholder="{% translate 'Zoek een item, schip of eigen containernaam…' %}">
+               placeholder="{% translate 'Zoek een item, een schip, een eigen containernaam of een plek…' %}">
 
         {% if characters|length > 1 %}
             <select class="ca-select" name="character">
@@ -20,21 +20,15 @@
 
         <button class="ca-knop" type="submit">{% translate "Zoeken" %}</button>
 
-        {# De vinkjes zitten in hetzelfde formulier, zodat een filter zonder
-           zoekterm ook werkt: "laat alles zien wat in Asset Safety ligt". #}
-        <div class="ca-filters">
-            {% for sleutel, label, aan in filters %}
-                <label class="ca-chip {% if aan %}is-aan{% endif %}">
-                    <input type="checkbox" name="vlag" value="{{ sleutel }}" {% if aan %}checked{% endif %}>
-                    {{ label }}
-                </label>
-            {% endfor %}
+        <div class="ca-hint">
+            {% translate "Een plek werkt ook als zoekterm:" %}
+            {% for woord in plekwoorden %}<code>{{ woord }}</code>{% if not forloop.last %} · {% endif %}{% endfor %}
         </div>
     </form>
 
     {% if not gezocht %}
         <div class="ca-leeg">
-            <p>{% translate "Typ waar je naar zoekt, of kies een plek met de knoppen hierboven." %}</p>
+            <p>{% translate "Typ waar je naar zoekt — een itemnaam, of een plek zoals ‘fleet hangar’." %}</p>
             <p class="ca-dim">
                 {% translate "Er wordt ook gezocht in wat er ín iets anders ligt: in de cargo of Fleet Hangar van een schip, in een kist in een kist, en in Asset Safety. Namen die je zelf aan een schip of container gaf tellen mee als zoekterm." %}
             </p>
@@ -53,6 +47,24 @@
         </div>
 
     {% else %}
+        {% if uitleg.plaatsen %}
+            <div class="ca-uitleg">
+                {% for p in uitleg.plaatsen %}<strong>{{ p }}</strong>{% if not forloop.last %}, {% endif %}{% endfor %}
+                {% if uitleg.via_url %}
+                    {% translate "als plek gefilterd." %}
+                {% else %}
+                    {% translate "opgevat als plek" %}{% if uitleg.rest %} {% translate "met" %} <strong>{{ uitleg.rest }}</strong>{% endif %}
+                    — {{ uitleg.in_plaats }} {% translate "daar" %}{% if uitleg.op_naam %},
+                        {% blocktranslate count n=uitleg.op_naam %}plus {{ n }} met die tekst in de naam{% plural %}plus {{ n }} met die tekst in de naam{% endblocktranslate %}{% endif %}.
+                    <span class="ca-dim">{% translate "Alleen op naam zoeken? Zet de term tussen aanhalingstekens." %}</span>
+                {% endif %}
+            </div>
+        {% elif uitleg.letterlijk %}
+            <div class="ca-uitleg">
+                {% translate "Alleen op naam gezocht:" %} <strong>{{ uitleg.letterlijk }}</strong>
+            </div>
+        {% endif %}
+
         <div class="ca-telling">
             {% blocktranslate count n=aantal %}{{ n }} plek gevonden{% plural %}{{ n }} plekken gevonden{% endblocktranslate %}
             <span class="ca-dim">({{ stapels }} {% translate "stapels" %})</span>

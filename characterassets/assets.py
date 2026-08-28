@@ -99,6 +99,57 @@ FILTER_LABEL = {
     "container": "In een container",
 }
 
+# Woorden die in de zoekbalk als **plek** gelden in plaats van als itemnaam.
+# De volgorde is niet vrij: langere zinnen staan boven de korte, zodat "fleet
+# hangar" niet als het losse woord "hangar" wordt gelezen.
+#
+# Dit is bewust raadwerk, en het raden gaat soms mis: van de 1491 typenamen in
+# een echte corp bevatten er 7 het woord "container" (Station Container...), 2
+# "hangar" en 1 "safety" (de Asset Safety Wrap zelf). Daarom vervangt een plek
+# de naamzoektocht nooit maar komt hij eroverheen — zie :func:`zoek_slim`.
+PLAATS_WOORDEN = (
+    ("fleethangar", ("fleet hangar", "fleethangar", "vlootruim")),
+    ("shiphangar", ("ship hangar", "shiphangar", "scheepsruim")),
+    ("safety", ("asset safety", "assetsafety", "safety", "veiligheid")),
+    ("schip", ("in een schip", "in schepen", "schip", "schepen")),
+    ("container", ("in een kist", "container", "kist", "kisten")),
+    ("hangar", ("hangar",)),
+)
+
+
+def plek_voorbeelden():
+    """De plekwoorden om onder de zoekbalk te tonen.
+
+    Het eerste woord per plek is het duidelijkste; de rest zijn synoniemen die
+    wel werken maar niemand hoeft te lezen. Een zoekbalk die stiekem meer kan
+    dan hij laat zien is een zoekbalk die niemand zo gebruikt.
+    """
+    return [varianten[0] for _, varianten in PLAATS_WOORDEN]
+
+
+def lees_plaats(term):
+    """Haal plek-woorden uit een zoekterm.
+
+    Geeft (rest, plaatsen, herkende woorden). "tritanium in fleet hangar" wordt
+    ("tritanium in", {"fleethangar"}, ["fleet hangar"]); dat losse "in" valt
+    verderop weg als stopwoord — als hele deelstring zou het namelijk niets
+    meer vinden, want geen enkel item heet "Tritanium in".
+    """
+    rest = f" {(term or '').lower()} "
+    plaatsen, woorden = set(), []
+    for sleutel, varianten in PLAATS_WOORDEN:
+        for woord in varianten:
+            # Op woordgrens: "kist" mag niet in "kistrand" vallen, en
+            # "ship" niet in "Ship Scanner I" — dat laatste staat er daarom
+            # ook niet als variant in.
+            patroon = rf"(?<![a-z0-9]){re.escape(woord)}(?![a-z0-9])"
+            if re.search(patroon, rest):
+                plaatsen.add(sleutel)
+                woorden.append(woord)
+                rest = re.sub(patroon, " ", rest)
+                break
+    return re.sub(r"\s+", " ", rest).strip(), plaatsen, woorden
+
 
 def is_schipvlag(vlag):
     """Of deze vlag alleen op een schip voorkomt."""
@@ -397,8 +448,41 @@ def _wortel_namen(idx, wortel_items, character_ids):
 # Zoeken
 # --------------------------------------------------------------------------
 
+# Woorden die je typt om een zin te maken, niet om iets te vinden. Ze blijven
+# over zodra er een plek uit de term gehaald is ("tritanium in fleet hangar"),
+# en als deelstring vinden ze dan niets meer.
+STOPWOORDEN = {"in", "op", "de", "het", "een", "van", "mijn", "m'n", "zit", "ligt", "liggen"}
+
+
+def _zoekwoorden(term):
+    """Een zoekterm als losse woorden, stopwoorden eruit."""
+    return [w for w in re.split(r"\s+", (term or "").strip().lower())
+            if w and w not in STOPWOORDEN]
+
+
+def _matcht(rij, woorden):
+    """Of alle zoekwoorden ergens in de naam van dit item voorkomen.
+
+    Woord voor woord in plaats van als één deelstring: "compact large" vindt
+    zo ook een *'Concussion' Compact Large Graviton Smartbomb*, waar de twee
+    woorden niet aan elkaar vast staan. De zelfgegeven naam telt mee, zodat je
+    op "rommel" die kist van jezelf terugvindt.
+    """
+    if not woorden:
+        return True
+    tekst = f"{rij['type_naam']} {rij['eigen_naam']}".lower()
+    return all(w in tekst for w in woorden)
+
+
 def zoek(idx, term, filters=None, character_id=None, wortel=None, limiet=MAX_TREFFERS):
-    """Treffers voor een zoekterm, met hun volledige locatiepad.
+    """Treffers voor een zoekterm, met hun volledige locatiepad."""
+    samen, stapels = _treffers(idx, term, set(filters or ()), character_id, wortel)
+    treffers, aantal = _sorteer(samen, limiet)
+    return treffers, aantal, stapels
+
+
+def _treffers(idx, term, filters, character_id=None, wortel=None):
+    """{sleutel: treffer} plus het aantal losse stapels dat erin zit.
 
     Zoekt op de typenaam en op de naam die de speler zelf aan een schip of
     container gaf — "waar ligt mijn *Ammo Hangar*" moet die kist vinden, ook al
@@ -408,8 +492,7 @@ def zoek(idx, term, filters=None, character_id=None, wortel=None, limiet=MAX_TRE
     soms in losse stacks, en dan wil je één regel van 4,2 miljoen Tritanium
     zien in plaats van zes regels die je zelf moet optellen.
     """
-    term = (term or "").strip().lower()
-    filters = set(filters or ())
+    woorden = _zoekwoorden(term)
 
     samen = {}
     totaal = 0
@@ -420,8 +503,7 @@ def zoek(idx, term, filters=None, character_id=None, wortel=None, limiet=MAX_TRE
             continue
         if filters and not (filters & rij["groepen"]):
             continue
-        if term and term not in rij["type_naam"].lower() \
-                and term not in (rij["eigen_naam"] or "").lower():
+        if not _matcht(rij, woorden):
             continue
 
         totaal += 1
@@ -444,9 +526,65 @@ def zoek(idx, term, filters=None, character_id=None, wortel=None, limiet=MAX_TRE
             "groepen": rij["groepen"],
         }
 
+    return samen, totaal
+
+
+def _sorteer(samen, limiet):
     treffers = sorted(samen.values(),
                       key=lambda h: (h["type_naam"].lower(), -h["aantal"]))
-    return treffers[:limiet], len(treffers), totaal
+    return treffers[:limiet], len(treffers)
+
+
+def zoek_slim(idx, term, character_id=None, limiet=MAX_TREFFERS):
+    """Zoeken waarbij een plek in de zoekterm ook als plek telt.
+
+    "fleet hangar" hoort te doen wat je verwacht zonder dat er een rij knoppen
+    onder de zoekbalk hoeft te staan. Het addertje is dat plekwoorden ook in
+    itemnamen voorkomen: er bestaat een *Station Container*, en Asset Safety
+    levert een *Asset Safety Wrap* op.
+
+    Daarom **vervangt** de plek de naamzoektocht nooit maar komt hij eroverheen:
+    je krijgt alles op die plek én alles waar die tekst in de naam zit. Je
+    verliest dus nooit een treffer door hoe wij een woord uitleggen. Wie alleen
+    de naam wil, zet de term tussen aanhalingstekens.
+
+    Geeft (treffers, aantal, stapels, uitleg) — die uitleg vertelt de pagina wat
+    er met de zoekterm gebeurd is, want stilzwijgend iets anders doen dan de
+    gebruiker typte is het ergste van twee werelden.
+    """
+    ruw = (term or "").strip()
+
+    if len(ruw) >= 2 and ruw[0] == '"' and ruw[-1] == '"':
+        letterlijk = ruw[1:-1].strip()
+        samen, stapels = _treffers(idx, letterlijk, set(), character_id)
+        treffers, aantal = _sorteer(samen, limiet)
+        return treffers, aantal, stapels, {"letterlijk": letterlijk}
+
+    op_naam, stapels = _treffers(idx, ruw, set(), character_id)
+    rest, plaatsen, woorden = lees_plaats(ruw)
+    if not plaatsen:
+        treffers, aantal = _sorteer(op_naam, limiet)
+        return treffers, aantal, stapels, {}
+
+    in_plaats, plaats_stapels = _treffers(idx, rest, plaatsen, character_id)
+    samen = dict(in_plaats)
+    extra = 0
+    for sleutel, hit in op_naam.items():
+        if sleutel not in samen:
+            samen[sleutel] = hit
+            extra += 1
+
+    treffers, aantal = _sorteer(samen, limiet)
+    return treffers, aantal, stapels + plaats_stapels, {
+        "plaatsen": [FILTER_LABEL[p] for p in sorted(plaatsen)],
+        "woorden": woorden,
+        # De opgeschoonde rest, niet de ruwe: "smartbomb in" tonen terwijl we
+        # intern op "smartbomb" zoeken, is de gebruiker iets anders vertellen
+        # dan we doen.
+        "rest": " ".join(_zoekwoorden(rest)),
+        "in_plaats": len(in_plaats),
+        "op_naam": extra,
+    }
 
 
 # --------------------------------------------------------------------------
@@ -461,17 +599,17 @@ def boom(idx, wortel_id, term=""):
     inhoud van de cargo van een Bustard op één hoop met wat er in de Fleet Hangar
     ligt, en dat zijn in het spel twee losse ruimtes.
     """
-    term = (term or "").strip().lower()
+    woorden = _zoekwoorden(term)
     teller = {"n": 0}
 
     directe = [r for r in idx.rijen
                if r["wortel"] == wortel_id
                and not (r["loc_type"] == "item" and r["loc_id"] in idx.per_item)]
-    knopen = _vlaglagen(idx, directe, term, teller)
+    knopen = _vlaglagen(idx, directe, woorden, teller)
     return knopen, teller["n"] >= MAX_KNOPEN
 
 
-def _vlaglagen(idx, rijen, term, teller):
+def _vlaglagen(idx, rijen, woorden, teller):
     """Groepeer rijen op vlag en bouw daaronder de knopen."""
     per_vlag = defaultdict(list)
     for rij in rijen:
@@ -479,7 +617,7 @@ def _vlaglagen(idx, rijen, term, teller):
 
     uit = []
     for vlag, groep in sorted(per_vlag.items(), key=lambda kv: _vlag_volgorde(kv[0])):
-        kinderen = [k for k in (_knoop(idx, rij, term, teller) for rij in
+        kinderen = [k for k in (_knoop(idx, rij, woorden, teller) for rij in
                                 sorted(groep, key=lambda r: r["naam"].lower()))
                     if k]
         if not kinderen:
@@ -529,7 +667,7 @@ def _vlag_volgorde(vlag):
     return (vaste.index(vlag), "") if vlag in vaste else (len(vaste), vlag)
 
 
-def _knoop(idx, rij, term, teller):
+def _knoop(idx, rij, woorden, teller):
     """Eén item in de boom, met z'n eigen inhoud eronder.
 
     Een tak blijft staan als hij zelf matcht **of** als er dieper iets in zit
@@ -542,10 +680,9 @@ def _knoop(idx, rij, term, teller):
 
     kinderen = []
     if idx.kinderen.get(rij["item_id"]):
-        kinderen = _vlaglagen(idx, idx.kinderen[rij["item_id"]], term, teller)
+        kinderen = _vlaglagen(idx, idx.kinderen[rij["item_id"]], woorden, teller)
 
-    zelf_match = not term or term in rij["type_naam"].lower() \
-        or term in (rij["eigen_naam"] or "").lower()
+    zelf_match = _matcht(rij, woorden)
     if not zelf_match and not kinderen:
         teller["n"] -= 1
         return None
@@ -560,5 +697,5 @@ def _knoop(idx, rij, term, teller):
         "eigen_naam": rij["eigen_naam"],
         "kinderen": kinderen,
         "totaal": rij["aantal"] + onder,
-        "match": zelf_match and bool(term),
+        "match": zelf_match and bool(woorden),
     }

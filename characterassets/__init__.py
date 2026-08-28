@@ -1,4 +1,4 @@
-"""Character Assets — Alliance Auth-plugin om assets terug te vinden.
+﻿"""Character Assets — Alliance Auth-plugin om assets terug te vinden.
 
 Zoekt door de assets van alle gekoppelde characters heen, ook wat er *in* iets
 anders ligt: in de cargo van een schip, in de Fleet Hangar of Ship Hangar van
@@ -10,5 +10,5 @@ locatie). Zonder de keten omhoog te lopen lijkt vrijwel niets ergens te liggen.
 Die keten is dan ook het hart van deze plugin.
 """
 
-__version__ = "1.0.1"
+__version__ = "1.1.0"
 __title__ = "Character Assets"

@@ -39,8 +39,6 @@
             <span class="ca-tabvul"></span>
 
             {% if mag_corp %}
-                {# Het bereik hoort zichtbaar te zijn: "niets gevonden" betekent
-                   iets heel anders als je alleen je eigen spullen doorzocht. #}
                 <span class="ca-bereik">
                     <a class="ca-bereikknop {% if bereik == 'mijn' %}is-actief{% endif %}"
                        href="?bereik=mijn{% if q %}&q={{ q|urlencode }}{% endif %}">{% translate "Mijn characters" %}</a>

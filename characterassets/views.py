@@ -71,23 +71,30 @@ def zoeken(request):
     idx = ctx["idx"]
 
     term = (request.GET.get("q") or "").strip()
+    # De knoppenrij is weg; plekken komen nu uit de zoekterm zelf. Als los
+    # URL-filter blijft ?vlag= wel bestaan — handig om een link te delen die
+    # meteen op Asset Safety staat.
     gekozen = {f for f in request.GET.getlist("vlag") if f in assets.FILTERS}
 
-    treffers, aantal, rijen = ([], 0, 0)
-    if term or gekozen:
-        treffers, aantal, rijen = assets.zoek(
-            idx, term, gekozen, ctx["character_id"])
+    treffers, aantal, rijen, uitleg = ([], 0, 0, {})
+    if gekozen:
+        treffers, aantal, rijen = assets.zoek(idx, term, gekozen, ctx["character_id"])
+        uitleg = {"plaatsen": [assets.FILTER_LABEL[f] for f in sorted(gekozen)],
+                  "via_url": True}
+    elif term:
+        treffers, aantal, rijen, uitleg = assets.zoek_slim(
+            idx, term, ctx["character_id"])
 
     ctx.update({
         "actief": "zoeken",
         "q": term,
-        "gekozen": gekozen,
-        "filters": [(f, assets.FILTER_LABEL[f], f in gekozen) for f in assets.FILTERS],
+        "uitleg": uitleg,
         "treffers": treffers,
         "aantal": aantal,
         "stapels": rijen,
         "afgekapt": aantal > len(treffers),
         "gezocht": bool(term or gekozen),
+        "plekwoorden": assets.plek_voorbeelden(),
     })
     return render(request, "characterassets/zoeken.html", ctx)
 
