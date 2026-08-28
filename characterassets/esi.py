@@ -385,6 +385,20 @@ def assets(character_id, ververs=False):
     return rijen, bijgewerkt, volledig
 
 
+def alles_gecached(character_ids):
+    """Staat van élk van deze characters de assets al in de cache?
+
+    Puur om te beslissen of de bezoeker een laadpagina krijgt of meteen z'n
+    resultaat. Doet zelf geen enkele call — de vraag "gaat dit lang duren?" mag
+    natuurlijk niet zelf lang duren.
+    """
+    ids = list(character_ids)
+    if not ids:
+        return True
+    gevonden = cache.get_many([f"ca_assets_{cid}" for cid in ids])
+    return len(gevonden) == len(set(ids))
+
+
 def item_namen(character_id, item_ids, ververs=False):
     """Namen die de speler zelf aan schepen en containers gaf.
 

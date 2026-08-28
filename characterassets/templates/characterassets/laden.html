@@ -1,0 +1,107 @@
+{% extends 'allianceauth/base-bs5.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block page_title %}{% translate "Character Assets" %}{% endblock %}
+{% block header_nav_brand %}{% translate "Character Assets" %}{% endblock header_nav_brand %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'characterassets/characterassets.css' %}?v={{ versie }}">
+{% endblock extra_css %}
+
+{% block content %}
+<div class="ca-app">
+    <div class="ca-laden" id="ca-laden"
+         data-werk="{{ werk_url }}"
+         data-doel="{{ doel }}"
+         data-voortgang="{% url 'characterassets:voortgang' %}?bereik={{ bereik }}">
+
+        <div class="ca-laden-kop">
+            <div class="ca-laden-ring" aria-hidden="true"></div>
+            <div>
+                <h2 class="ca-laden-titel">
+                    {% if ververst %}
+                        {% translate "Opnieuw ophalen bij ESI…" %}
+                    {% else %}
+                        {% translate "Assets ophalen bij ESI…" %}
+                    {% endif %}
+                </h2>
+                <div class="ca-laden-sub ca-dim" id="ca-laden-sub">
+                    {% translate "Even geduld — dit gebeurt één keer per uur, daarna komt alles uit de cache." %}
+                </div>
+            </div>
+        </div>
+
+        {# Bootstrap-progressbar. Begint als een schuivend streepje — we weten nog
+           niet hoeveel characters er zijn, en een volle balk zou "klaar"
+           betekenen. Zodra de eerste telling binnen is wordt het een echte balk
+           die met de characters meeloopt. #}
+        <div class="progress ca-laden-balk" role="progressbar"
+             aria-label="{% translate 'Voortgang van het ophalen' %}"
+             aria-valuemin="0" aria-valuemax="100"
+             id="ca-balk-buiten">
+            <div class="progress-bar progress-bar-striped progress-bar-animated is-onbekend"
+                 id="ca-balk"></div>
+        </div>
+
+        <div class="ca-laden-teller ca-dim" id="ca-laden-teller"></div>
+
+        <noscript>
+            <div class="ca-laden-teller">
+                <a class="ca-laden-knop" href="{{ werk_url }}">{% translate "Doorgaan zonder JavaScript" %}</a>
+            </div>
+        </noscript>
+    </div>
+</div>
+
+<script>
+(function () {
+    var el = document.getElementById("ca-laden");
+    var balk = document.getElementById("ca-balk");
+    var buiten = document.getElementById("ca-balk-buiten");
+    var teller = document.getElementById("ca-laden-teller");
+    var sub = document.getElementById("ca-laden-sub");
+    var klaar = false;
+
+    // De trage call. Die warmt de cache; het antwoord zelf gooien we weg, want
+    // daarna is de gewone pagina er in een halve seconde.
+    fetch(el.dataset.werk, {credentials: "same-origin"})
+        .then(function () {
+            klaar = true;
+            window.location.replace(el.dataset.doel);
+        })
+        .catch(function () {
+            klaar = true;
+            sub.textContent = "{% translate 'Het ophalen is misgegaan. Probeer het opnieuw.' %}";
+            buiten.classList.add("is-mis");
+            balk.className = "progress-bar";
+            balk.style.width = "100%";
+        });
+
+    function toon(stand) {
+        if (!stand.bezig || !stand.totaal) { return; }
+        var pct = Math.round((stand.klaar / stand.totaal) * 100);
+        // We weten nu hoeveel het er zijn: van schuivend streepje naar echte balk.
+        balk.classList.remove("is-onbekend", "progress-bar-striped",
+                              "progress-bar-animated");
+        // Nooit op 100 blijven staan zolang we nog bezig zijn: na het ophalen
+        // komen de namen en de locatieketen nog. Anders staat de balk vol
+        // terwijl er nog iets gebeurt, en dat leest als "hij hangt".
+        balk.style.width = Math.min(pct, 95) + "%";
+        buiten.setAttribute("aria-valuenow", pct);
+        teller.textContent = stand.klaar + " / " + stand.totaal
+            + " {% translate 'characters' %}"
+            + (stand.naam ? " · " + stand.naam : "");
+    }
+
+    (function peil() {
+        if (klaar) { return; }
+        fetch(el.dataset.voortgang, {credentials: "same-origin"})
+            .then(function (r) { return r.json(); })
+            .then(toon)
+            .catch(function () { /* een gemiste peiling is niet erg */ })
+            .then(function () { if (!klaar) { setTimeout(peil, 1000); } });
+    })();
+})();
+</script>
+{% endblock %}

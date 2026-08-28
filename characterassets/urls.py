@@ -10,4 +10,5 @@ urlpatterns = [
     path("", views.zoeken, name="index"),
     path("zoeken/", views.zoeken, name="zoeken"),
     path("boom/", views.boom, name="boom"),
+    path("voortgang/", views.voortgang, name="voortgang"),
 ]

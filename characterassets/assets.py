@@ -22,7 +22,7 @@ aantal items; met memo is het lineair, want ketens worden gedeeld.
 import logging
 import re
 from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from django.db import connections
 
@@ -181,8 +181,12 @@ class Index:
         self.onvolledig = []        # characters waarvan ESI maar de helft gaf
 
 
-def bouw(characters, ververs=False):
-    """Bouw de index voor deze characters."""
+def bouw(characters, ververs=False, melden=None):
+    """Bouw de index voor deze characters.
+
+    `melden(klaar, totaal, naam)` is optioneel en wordt tijdens het ophalen
+    aangeroepen; de laadpagina zet dat om in een voortgangsbalk.
+    """
     idx = Index()
     if not characters:
         return idx
@@ -193,7 +197,11 @@ def bouw(characters, ververs=False):
     if not met:
         return idx
 
-    ruw = _haal_parallel([c.character_id for c in met], ververs)
+    def _melden(klaar, totaal, cid):
+        if melden:
+            melden(klaar, totaal, idx.chars.get(cid, ""))
+
+    ruw = _haal_parallel([c.character_id for c in met], ververs, _melden)
 
     # --- 1. platte rijen, met character erbij -----------------------------
     tijden, onvolledig = [], []
@@ -267,13 +275,17 @@ def bouw(characters, ververs=False):
     return idx
 
 
-def _haal_parallel(character_ids, ververs):
+def _haal_parallel(character_ids, ververs, melden=None):
     """De ruwe ESI-rijen per character, een paar tegelijk.
 
     `connections.close_all()` in de worker is geen sierlijk detail maar nodig:
     elke thread opent z'n eigen databaseverbinding voor de tokenopzoeking, en
     die blijven anders open rondslingeren. Op Windows loopt dat uit de hand —
     daar hebben we eerder de ephemeral poorten mee uitgeput.
+
+    `melden(klaar, totaal, naam)` wordt na elk character aangeroepen. Daar hangt
+    de voortgangsbalk aan: dit is de enige stap die lang duurt, dus dit is ook
+    de enige plek waar eerlijk iets te melden valt.
     """
     uit = {}
 
@@ -286,9 +298,16 @@ def _haal_parallel(character_ids, ververs):
         finally:
             connections.close_all()
 
+    # `pool.map` levert in de volgorde van de invoer, dus zou de teller bij een
+    # traag eerste character stil blijven staan terwijl de rest allang binnen
+    # is. `as_completed` telt op het moment dat er echt iets af is.
     with ThreadPoolExecutor(max_workers=PARALLEL) as pool:
-        for cid, resultaat in pool.map(haal, character_ids):
+        futures = {pool.submit(haal, cid): cid for cid in character_ids}
+        for f in as_completed(futures):
+            cid, resultaat = f.result()
             uit[cid] = resultaat
+            if melden:
+                melden(len(uit), len(futures), cid)
     return uit
 
 

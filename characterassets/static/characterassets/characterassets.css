@@ -188,3 +188,71 @@
     text-transform: uppercase; color: var(--ca-gold);
 }
 .ca-app .ca-tak-schip > summary .ca-label { color: var(--ca-blue); font-weight: 600; }
+
+/* ── Laadscherm ───────────────────────────────────────────────────────────
+   Bij een koude cache duurt de eerste ronde bij ESI seconden tot minuten. Die
+   tijd hoort niet als een witte pagina te voelen, dus komt dit scherm eerst
+   terug en loopt de balk mee met de characters die binnen zijn. */
+.ca-app .ca-laden {
+    max-width: 620px; margin: 3rem auto; padding: 1.6rem 1.5rem 1.4rem;
+    border-radius: 6px; background: var(--ca-surface);
+    border: 1px solid var(--ca-border);
+    box-shadow: 0 18px 40px -28px rgba(0, 0, 0, .9);
+}
+.ca-app .ca-laden-kop { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.2rem; }
+.ca-app .ca-laden-titel { font-size: 1.12rem; font-weight: 700; margin: 0 0 .2rem; }
+.ca-app .ca-laden-sub { font-size: .84rem; }
+
+/* Draaiende ring in het goud van de plugin: een kwart gekleurd, de rest de
+   randkleur — dan is de rotatie zichtbaar zonder dat het een spinner-gif wordt. */
+.ca-app .ca-laden-ring {
+    width: 38px; height: 38px; flex: none; border-radius: 50%;
+    border: 3px solid var(--ca-border); border-top-color: var(--ca-gold);
+    animation: ca-draai .9s linear infinite;
+}
+@keyframes ca-draai { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+    .ca-app .ca-laden-ring { animation-duration: 3s; }
+}
+
+/* De Bootstrap-progressbar in het palet van de plugin. */
+.ca-app .ca-laden-balk {
+    height: 10px; border-radius: 999px; background: var(--ca-surface-2);
+    border: 1px solid var(--ca-border); overflow: hidden;
+}
+/* `background-color` en niet `background`: anders overschrijft dit de strepen
+   die Bootstrap als background-image tekent, en zie je van
+   .progress-bar-striped niets terug. */
+.ca-app .ca-laden-balk .progress-bar {
+    background-color: var(--ca-gold);
+    transition: width .45s ease;
+}
+.ca-app .ca-laden-balk .progress-bar:not(.progress-bar-striped) {
+    background-image: linear-gradient(90deg, var(--ca-gold), #ffdd7a);
+}
+
+/* Zolang we het aantal characters nog niet weten valt er niets te vullen. Een
+   volle balk zou dan "klaar" betekenen, dus schuift er een streepje heen en
+   weer tot de eerste telling binnen is. */
+.ca-app .ca-laden-balk .progress-bar.is-onbekend {
+    width: 35%; transition: none;
+    animation: ca-schuif 1.5s ease-in-out infinite;
+}
+@keyframes ca-schuif {
+    0% { margin-left: -35%; }
+    100% { margin-left: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .ca-app .ca-laden-balk .progress-bar.is-onbekend { animation-duration: 4s; }
+}
+.ca-app .ca-laden-balk.is-mis .progress-bar { background: var(--ca-red); }
+.ca-app .ca-laden-teller {
+    margin-top: .6rem; font-size: .82rem; min-height: 1.2em;
+    font-variant-numeric: tabular-nums;
+}
+.ca-app .ca-laden-knop {
+    display: inline-block; margin-top: .4rem; padding: .35rem .8rem;
+    border-radius: 3px; font-size: .82rem; font-weight: 600;
+    color: #0f0f22; background: var(--ca-gold);
+}
+.ca-app .ca-laden-knop:hover { text-decoration: none; filter: brightness(1.08); }

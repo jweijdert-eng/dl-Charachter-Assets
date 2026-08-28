@@ -94,6 +94,22 @@ CHARACTERASSETS_CORPORATION_IDS = [98000001, 98000002]
 CHARACTERASSETS_ALLIANCE_IDS = [99013537]
 ```
 
+## Het laadscherm
+
+Bij een koude cache duurt de eerste ronde bij ESI seconden tot minuten — en
+omdat het ophalen ín de request gebeurt, kreeg de browser al die tijd niets: een
+witte pagina die eruitziet alsof hij hangt.
+
+Sinds 1.3.0 komt er eerst een laadscherm terug met een voortgangsbalk die
+meeloopt met de characters die binnen zijn (*7 / 12 characters · Kaas Baas*).
+Dat scherm start zelf de trage call en gaat daarna door naar je resultaat. Het
+verschijnt alleen als er echt nog niets in de cache zit, of als je op "Opnieuw
+ophalen" drukt; bij een warme cache is de pagina er in een halve seconde en zou
+een laadscherm alleen een extra flits zijn.
+
+Zonder JavaScript werkt het ook — dan staat er een gewone link die doet wat de
+plugin hiervoor deed: wachten tot de pagina er is.
+
 ## Cache warm houden (aanbevolen bij een grote corp)
 
 Zonder dit haalt de eerste bezoeker de assets op en wacht daarop. Met een
